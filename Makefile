@@ -1,4 +1,4 @@
-.PHONY: build run test clean docker-build docker-run
+.PHONY: build run docker-build docker-run
 
 build:
 	go build -o ./build/ctlstream ./cmd/ctlstream
