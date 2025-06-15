@@ -15,7 +15,7 @@ import (
 
 const (
 	LogListURL   = "https://www.gstatic.com/ct/log_list/v3/all_logs_list.json"
-	UserAgent    = "ctstream"
+	UserAgent    = "ctlstream"
 	batchSize    = 256
 	pollInterval = 5 * time.Second
 	maxBackoff   = time.Minute
