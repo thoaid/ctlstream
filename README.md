@@ -4,7 +4,7 @@ A simple [Certificate Transparency Log](https://en.wikipedia.org/wiki/Certificat
 
 # Installation
 
-Binaries for Linux, OSX and Windows can be found on the [latest release](/releases/latest) page. 
+Binaries for Linux, OSX and Windows can be found on the [latest release](https://github.com/thoaid/ctlstream/releases/latest) page. 
 
 # Usage
 
