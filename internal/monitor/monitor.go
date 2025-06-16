@@ -92,7 +92,7 @@ func MonitorLog(ctx context.Context, h *hub.Hub, lg CTLog, noCert bool) {
 		treeSize, err := getTreeSize(ctx, client, lg.URL)
 		if err != nil {
 			time.Sleep(backoff)
-			backoff = minDuration(backoff*2, maxBackoff)
+			backoff = min(backoff*2, maxBackoff)
 			continue
 		}
 		backoff = time.Second
@@ -195,18 +195,4 @@ func getEntries(ctx context.Context, client *http.Client, logURL string, start, 
 	}
 
 	return result.Entries, nil
-}
-
-func min(a, b uint64) uint64 {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-func minDuration(a, b time.Duration) time.Duration {
-	if a < b {
-		return a
-	}
-	return b
 }
