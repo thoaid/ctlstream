@@ -8,7 +8,7 @@ Binaries for Linux, OSX and Windows can be found on the [latest release](https:/
 
 # Usage
 
-A websocket will be exposed via `:8080/ws`. You can connect to it using any client of your choice. For example, using `websocat`:
+A websocket will be exposed via `localhost:8080/ws`. You can connect to it using any client of your choice. For example, using `websocat`:
 
 ```
 $ websocat ws://localhost:8080/ws | head -n3
