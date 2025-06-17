@@ -17,3 +17,8 @@ $ websocat ws://localhost:8080/ws | head -n3
 {"subject":"CN=www.m.notturni.com","issuer":"CN=R10,O=Let's Encrypt,C=US","not_before":"2025-06-15T14:08:52Z","not_after":"2025-09-13T14:08:51Z","source":"DigiCert 'Sphinx2025h2' Log","timestamp":1750000048}
 ```
 Certificates are included in the output by default. If you only care about metadata, pass the `-nocert` flag when starting the server.
+
+
+# Public instance
+
+A public instance of ctlstream can be found at: `wss://ctlstream.interrupt.sh/stream`
