@@ -23,7 +23,7 @@ $ websocat ws://localhost:8080/ws
 * The output is simple JSON. You can pipe it into tools like `jq` or save it to a file for post-processing:
 
 ```
-$ websocat ws://localhost:8080/ws | jq '.subject.cn'
+$ websocat ws://localhost:8080/ws | jq '.subject.CN'
 "www.scc-ny.com"
 "www.teamhustlemovement.com"
 "nostalgie-shop.de"
