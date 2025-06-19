@@ -91,7 +91,7 @@ func (lm *LogMonitor) periodicRefresh() {
 }
 
 func (lm *LogMonitor) refreshLogs() error {
-	logs, err := FetchLogs(lm.ctx)
+	logs, err := fetchLogs(lm.ctx)
 	if err != nil {
 		return err
 	}
@@ -117,7 +117,7 @@ func (lm *LogMonitor) refreshLogs() error {
 			log.Printf("adding CT log: %s (%s)", lg.Description, lg.URL)
 			ctx, cancel := context.WithCancel(lm.ctx)
 			lm.activeLogs[lg.URL] = cancel
-			go MonitorLog(ctx, lm.hub, lg, lm.noCert)
+			go monitorLog(ctx, lm.hub, lg, lm.noCert)
 		}
 	}
 
@@ -125,7 +125,7 @@ func (lm *LogMonitor) refreshLogs() error {
 	return nil
 }
 
-func FetchLogs(ctx context.Context) ([]CTLog, error) {
+func fetchLogs(ctx context.Context) ([]CTLog, error) {
 	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, LogListURL, nil)
 	req.Header.Set("User-Agent", UserAgent)
 
@@ -161,7 +161,7 @@ func FetchLogs(ctx context.Context) ([]CTLog, error) {
 	return logs, nil
 }
 
-func MonitorLog(ctx context.Context, h *hub.Hub, lg CTLog, noCert bool) {
+func monitorLog(ctx context.Context, h *hub.Hub, lg CTLog, noCert bool) {
 	log.Printf("starting monitor for %s (%s)", lg.Description, lg.URL)
 	defer log.Printf("stopped monitoring %s", lg.Description)
 
