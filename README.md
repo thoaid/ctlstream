@@ -8,24 +8,25 @@ Binaries for Linux, OSX and Windows can be found on the [latest release](https:/
 
 # Usage
 
-* A websocket will be exposed via `localhost:8080/ws`. You can connect to it using any client of your choice. For example, using `websocat`:
+* Certificates are included in the output by default. If you only care about metadata, pass the `-nocert` flag when starting the server.
+
+* A websocket will be exposed via `:8080/ws`. You can connect to it using any client of your choice. For example, using `websocat`:
 
 ```
 $ websocat ws://localhost:8080/ws
-{"subject":"CN=strategylogics.com","issuer":"CN=R11,O=Let's Encrypt,C=US","not_before":"2025-06-15T14:08:54Z","not_after":"2025-09-13T14:08:53Z","source":"DigiCert 'Sphinx2025h2' Log","timestamp":1750000048}
-{"subject":"CN=www.vdi.navalgijon.es","issuer":"CN=R11,O=Let's Encrypt,C=US","not_before":"2025-06-15T13:57:20Z","not_after":"2025-09-13T13:57:19Z","source":"DigiCert 'Sphinx2025h2' Log","timestamp":1750000048}
-{"subject":"CN=www.m.notturni.com","issuer":"CN=R10,O=Let's Encrypt,C=US","not_before":"2025-06-15T14:08:52Z","not_after":"2025-09-13T14:08:51Z","source":"DigiCert 'Sphinx2025h2' Log","timestamp":1750000048}
+{"subject":{"cn":"jessy-yung-couverture.com","o":null,"ou":null,"c":null,"raw":"CN=jessy-yung-couverture.com"},"issuer":{"cn":"R11","o":["Let's Encrypt"],"ou":null,"c":["US"],"raw":"CN=R11,O=Let's Encrypt,C=US"},"not_before":"2025-06-19T19:30:14Z","not_after":"2025-09-17T19:30:13Z","source":"Google 'Argon2025h2' log","timestamp":1750364999}
+{"subject":{"cn":"api.biolifrplasma.com","o":null,"ou":null,"c":null,"raw":"CN=api.biolifrplasma.com"},"issuer":{"cn":"R11","o":["Let's Encrypt"],"ou":null,"c":["US"],"raw":"CN=R11,O=Let's Encrypt,C=US"},"not_before":"2025-06-19T19:30:18Z","not_after":"2025-09-17T19:30:17Z","source":"Google 'Argon2025h2' log","timestamp":1750364999}
+{"subject":{"cn":"www.mx01.expo-realestate.com","o":null,"ou":null,"c":null,"raw":"CN=www.mx01.expo-realestate.com"},"issuer":{"cn":"R11","o":["Let's Encrypt"],"ou":null,"c":["US"],"raw":"CN=R11,O=Let's Encrypt,C=US"},"not_before":"2025-06-19T19:30:18Z","not_after":"2025-09-17T19:30:17Z","source":"Google 'Argon2025h2' log","timestamp":1750364999}
 ...
 ```
-* Certificates are included in the output by default. If you only care about metadata, pass the `-nocert` flag when starting the server.
 
 * The output is simple JSON. You can pipe it into tools like `jq` or save it to a file for post-processing:
 
 ```
-$ websocat ws://localhost:8080/ws | jq '.subject'
-"CN=fagra.com"
-"CN=*.anxo.co.za"
-"CN=demchuk.keenetic.pro"
+$ websocat ws://localhost:8080/ws | jq '.subject.cn'
+"www.scc-ny.com"
+"www.teamhustlemovement.com"
+"nostalgie-shop.de"
 ...
 ```
 

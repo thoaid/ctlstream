@@ -2,12 +2,21 @@ package parser
 
 import (
 	"crypto/x509"
+	"crypto/x509/pkix"
 	"encoding/base64"
 	"encoding/pem"
 
 	ct "github.com/google/certificate-transparency-go"
 	"github.com/google/certificate-transparency-go/tls"
 )
+
+type DNInfo struct {
+	CommonName         string   `json:"cn"`
+	Organization       []string `json:"o"`
+	OrganizationalUnit []string `json:"ou"`
+	Country            []string `json:"c"`
+	Raw                string   `json:"raw"`
+}
 
 func ParseCertificates(leafB64, extraB64 string) ([]*x509.Certificate, error) {
 	leafData, err := base64.StdEncoding.DecodeString(leafB64)
@@ -62,4 +71,14 @@ func CertToPEM(cert *x509.Certificate) string {
 		Type:  "CERTIFICATE",
 		Bytes: cert.Raw,
 	}))
+}
+
+func ParseDN(name pkix.Name) DNInfo {
+	return DNInfo{
+		CommonName:         name.CommonName,
+		Organization:       name.Organization,
+		OrganizationalUnit: name.OrganizationalUnit,
+		Country:            name.Country,
+		Raw:                name.String(),
+	}
 }

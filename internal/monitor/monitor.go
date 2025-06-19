@@ -16,7 +16,7 @@ import (
 const (
 	LogListURL   = "https://www.gstatic.com/ct/log_list/v3/all_logs_list.json"
 	UserAgent    = "ctlstream"
-	batchSize    = 256
+	batchSize    = 512
 	pollInterval = 5 * time.Second
 	maxBackoff   = time.Minute
 )
@@ -30,13 +30,13 @@ type CTLog struct {
 }
 
 type CertMessage struct {
-	CertPEM   string `json:"cert_pem,omitempty"`
-	Subject   string `json:"subject"`
-	Issuer    string `json:"issuer"`
-	NotBefore string `json:"not_before"`
-	NotAfter  string `json:"not_after"`
-	Source    string `json:"source"`
-	Timestamp int64  `json:"timestamp"`
+	CertPEM   string        `json:"cert_pem"`
+	Subject   parser.DNInfo `json:"subject"`
+	Issuer    parser.DNInfo `json:"issuer"`
+	NotBefore string        `json:"not_before"`
+	NotAfter  string        `json:"not_after"`
+	Source    string        `json:"source"`
+	Timestamp int64         `json:"timestamp"`
 }
 
 type Entry struct {
@@ -121,8 +121,8 @@ func MonitorLog(ctx context.Context, h *hub.Hub, lg CTLog, noCert bool) {
 				certs, _ := parser.ParseCertificates(e.LeafInput, e.ExtraData)
 				for _, cert := range certs {
 					msg := CertMessage{
-						Subject:   cert.Subject.String(),
-						Issuer:    cert.Issuer.String(),
+						Subject:   parser.ParseDN(cert.Subject),
+						Issuer:    parser.ParseDN(cert.Issuer),
 						NotBefore: cert.NotBefore.Format(time.RFC3339),
 						NotAfter:  cert.NotAfter.Format(time.RFC3339),
 						Source:    lg.Description,
@@ -157,7 +157,7 @@ func getTreeSize(ctx context.Context, client *http.Client, logURL string) (uint6
 
 	if resp.StatusCode != http.StatusOK {
 		io.Copy(io.Discard, resp.Body)
-		return 0, fmt.Errorf("status %d", resp.StatusCode)
+		return 0, err
 	}
 
 	var sth struct {
