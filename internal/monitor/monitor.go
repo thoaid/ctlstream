@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/thoaid/ctlstream/internal/hub"
@@ -14,11 +16,12 @@ import (
 )
 
 const (
-	LogListURL   = "https://www.gstatic.com/ct/log_list/v3/all_logs_list.json"
-	UserAgent    = "ctlstream"
-	batchSize    = 512
-	pollInterval = 5 * time.Second
-	maxBackoff   = time.Minute
+	LogListURL     = "https://www.gstatic.com/ct/log_list/v3/all_logs_list.json"
+	UserAgent      = "ctlstream"
+	batchSize      = 512
+	pollInterval   = 10 * time.Second
+	maxBackoff     = time.Minute * 2
+	logListRefresh = 15 * time.Minute
 )
 
 type CTLog struct {
@@ -44,6 +47,83 @@ type Entry struct {
 	ExtraData string `json:"extra_data"`
 }
 
+type LogMonitor struct {
+	ctx        context.Context
+	hub        *hub.Hub
+	noCert     bool
+	mu         sync.RWMutex
+	activeLogs map[string]context.CancelFunc
+}
+
+func NewLogMonitor(ctx context.Context, h *hub.Hub, noCert bool) *LogMonitor {
+	return &LogMonitor{
+		ctx:        ctx,
+		hub:        h,
+		noCert:     noCert,
+		activeLogs: make(map[string]context.CancelFunc),
+	}
+}
+
+func (lm *LogMonitor) Start() error {
+	if err := lm.refreshLogs(); err != nil {
+		return fmt.Errorf("initial log fetch: %w", err)
+	}
+
+	go lm.periodicRefresh()
+	return nil
+}
+
+func (lm *LogMonitor) periodicRefresh() {
+	ticker := time.NewTicker(logListRefresh)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			if err := lm.refreshLogs(); err != nil {
+				log.Printf("failed to refresh log list: %v", err)
+			}
+		case <-lm.ctx.Done():
+			return
+		}
+	}
+}
+
+func (lm *LogMonitor) refreshLogs() error {
+	logs, err := FetchLogs(lm.ctx)
+	if err != nil {
+		return err
+	}
+
+	lm.mu.Lock()
+	defer lm.mu.Unlock()
+
+	currentLogs := make(map[string]bool)
+	for _, lg := range logs {
+		currentLogs[lg.URL] = true
+	}
+
+	for url, cancel := range lm.activeLogs {
+		if !currentLogs[url] {
+			log.Printf("removing CT log: %s", url)
+			cancel()
+			delete(lm.activeLogs, url)
+		}
+	}
+
+	for _, lg := range logs {
+		if _, exists := lm.activeLogs[lg.URL]; !exists {
+			log.Printf("adding CT log: %s (%s)", lg.Description, lg.URL)
+			ctx, cancel := context.WithCancel(lm.ctx)
+			lm.activeLogs[lg.URL] = cancel
+			go MonitorLog(ctx, lm.hub, lg, lm.noCert)
+		}
+	}
+
+	log.Printf("monitoring %d CT logs", len(lm.activeLogs))
+	return nil
+}
+
 func FetchLogs(ctx context.Context) ([]CTLog, error) {
 	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, LogListURL, nil)
 	req.Header.Set("User-Agent", UserAgent)
@@ -53,6 +133,10 @@ func FetchLogs(ctx context.Context) ([]CTLog, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("log list fetch failed: status %d", resp.StatusCode)
+	}
 
 	var list struct {
 		Operators []struct {
@@ -77,9 +161,12 @@ func FetchLogs(ctx context.Context) ([]CTLog, error) {
 }
 
 func MonitorLog(ctx context.Context, h *hub.Hub, lg CTLog, noCert bool) {
+	log.Printf("starting monitor for %s (%s)", lg.Description, lg.URL)
+	defer log.Printf("stopped monitoring %s", lg.Description)
+
 	client := &http.Client{Timeout: 15 * time.Second}
 	var lastIndex uint64
-	backoff := time.Second
+	backoff := pollInterval
 	initialized := false
 
 	for {
@@ -91,11 +178,12 @@ func MonitorLog(ctx context.Context, h *hub.Hub, lg CTLog, noCert bool) {
 
 		treeSize, err := getTreeSize(ctx, client, lg.URL)
 		if err != nil {
+			log.Printf("failed to get tree size for %s: %v", lg.Description, err)
 			time.Sleep(backoff)
 			backoff = min(backoff*2, maxBackoff)
 			continue
 		}
-		backoff = time.Second
+		backoff = pollInterval
 
 		if !initialized {
 			lastIndex = treeSize
@@ -114,6 +202,7 @@ func MonitorLog(ctx context.Context, h *hub.Hub, lg CTLog, noCert bool) {
 
 			entries, err := getEntries(ctx, client, lg.URL, start, end)
 			if err != nil {
+				log.Printf("failed to get entries for %s (range %d-%d): %v", lg.Description, start, end, err)
 				break
 			}
 
@@ -157,7 +246,7 @@ func getTreeSize(ctx context.Context, client *http.Client, logURL string) (uint6
 
 	if resp.StatusCode != http.StatusOK {
 		io.Copy(io.Discard, resp.Body)
-		return 0, err
+		return 0, fmt.Errorf("status %d, ", resp.StatusCode)
 	}
 
 	var sth struct {

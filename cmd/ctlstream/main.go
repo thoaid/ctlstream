@@ -34,14 +34,9 @@ func main() {
 
 	http.HandleFunc("/ws", h.HandleWS)
 
-	logs, err := monitor.FetchLogs(ctx)
-	if err != nil {
-		log.Fatalf("fetch logs: %v", err)
-	}
-
-	log.Printf("monitoring %d CT logs", len(logs))
-	for _, lg := range logs {
-		go monitor.MonitorLog(ctx, h, lg, *noCert)
+	lm := monitor.NewLogMonitor(ctx, h, *noCert)
+	if err := lm.Start(); err != nil {
+		log.Fatalf("failed to start log monitor: %v", err)
 	}
 
 	srv := &http.Server{
