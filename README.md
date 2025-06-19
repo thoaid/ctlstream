@@ -2,6 +2,12 @@
 
 A simple [Certificate Transparency Log](https://en.wikipedia.org/wiki/Certificate_Transparency) streaming implementation. It fetches all known usable logs from a [list maintained by Google](https://www.gstatic.com/ct/log_list/v3/all_logs_list.json) and monitors those logs for new certificate issuances. The output is streamed via a websocket in JSON format, available to consume using any client of your choice.
 
+# Demo
+
+A demo showing the stream in action can be found at: https://ctlstream-demo.interrupt.sh/
+
+![ctlstream demo](res/demo.png "ctlstream demo")
+
 # Installation
 
 Binaries for Linux, OSX and Windows can be found on the [latest release](https://github.com/thoaid/ctlstream/releases/latest) page. 
