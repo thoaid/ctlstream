@@ -14,9 +14,9 @@ Binaries for Linux, OSX and Windows can be found on the [latest release](https:/
 
 ```
 $ websocat ws://localhost:8080/ws
-{"subject":{"cn":"jessy-yung-couverture.com","o":null,"ou":null,"c":null,"raw":"CN=jessy-yung-couverture.com"},"issuer":{"cn":"R11","o":["Let's Encrypt"],"ou":null,"c":["US"],"raw":"CN=R11,O=Let's Encrypt,C=US"},"not_before":"2025-06-19T19:30:14Z","not_after":"2025-09-17T19:30:13Z","source":"Google 'Argon2025h2' log","timestamp":1750364999}
-{"subject":{"cn":"api.biolifrplasma.com","o":null,"ou":null,"c":null,"raw":"CN=api.biolifrplasma.com"},"issuer":{"cn":"R11","o":["Let's Encrypt"],"ou":null,"c":["US"],"raw":"CN=R11,O=Let's Encrypt,C=US"},"not_before":"2025-06-19T19:30:18Z","not_after":"2025-09-17T19:30:17Z","source":"Google 'Argon2025h2' log","timestamp":1750364999}
-{"subject":{"cn":"www.mx01.expo-realestate.com","o":null,"ou":null,"c":null,"raw":"CN=www.mx01.expo-realestate.com"},"issuer":{"cn":"R11","o":["Let's Encrypt"],"ou":null,"c":["US"],"raw":"CN=R11,O=Let's Encrypt,C=US"},"not_before":"2025-06-19T19:30:18Z","not_after":"2025-09-17T19:30:17Z","source":"Google 'Argon2025h2' log","timestamp":1750364999}
+{"subject":{"CN":"jessy-yung-couverture.com","O":null,"OU":null,"C":null,"raw":"CN=jessy-yung-couverture.com"},"issuer":{"CN":"R11","O":["Let's Encrypt"],"OU":null,"C":["US"],"raw":"CN=R11,O=Let's Encrypt,C=US"},"not_before":"2025-06-19T19:30:14Z","not_after":"2025-09-17T19:30:13Z","source":"Google 'Argon2025h2' log","timestamp":1750364999}
+{"subject":{"CN":"api.biolifrplasma.com","O":null,"OU":null,"C":null,"raw":"CN=api.biolifrplasma.com"},"issuer":{"CN":"R11","O":["Let's Encrypt"],"OU":null,"C":["US"],"raw":"CN=R11,O=Let's Encrypt,C=US"},"not_before":"2025-06-19T19:30:18Z","not_after":"2025-09-17T19:30:17Z","source":"Google 'Argon2025h2' log","timestamp":1750364999}
+{"subject":{"CN":"www.mx01.expo-realestate.com","O":null,"OU":null,"C":null,"raw":"CN=www.mx01.expo-realestate.com"},"issuer":{"CN":"R11","O":["Let's Encrypt"],"OU":null,"C":["US"],"raw":"CN=R11,O=Let's Encrypt,C=US"},"not_before":"2025-06-19T19:30:18Z","not_after":"2025-09-17T19:30:17Z","source":"Google 'Argon2025h2' log","timestamp":1750364999}
 ...
 ```
 

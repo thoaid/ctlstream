@@ -11,10 +11,10 @@ import (
 )
 
 type DNInfo struct {
-	CommonName         string   `json:"cn"`
-	Organization       []string `json:"o"`
-	OrganizationalUnit []string `json:"ou"`
-	Country            []string `json:"c"`
+	CommonName         string   `json:"CN"`
+	Organization       []string `json:"O"`
+	OrganizationalUnit []string `json:"OU"`
+	Country            []string `json:"C"`
 	Raw                string   `json:"raw"`
 }
 
