@@ -18,6 +18,11 @@ type DNInfo struct {
 	Raw                string   `json:"raw"`
 }
 
+type SANInfo struct {
+	DNSNames    []string `json:"dns_names"`
+	IPAddresses []string `json:"ip_addresses"`
+}
+
 func ParseCertificates(leafB64, extraB64 string) ([]*x509.Certificate, error) {
 	leafData, err := base64.StdEncoding.DecodeString(leafB64)
 	if err != nil {
@@ -81,4 +86,22 @@ func ParseDN(name pkix.Name) DNInfo {
 		Country:            name.Country,
 		Raw:                name.String(),
 	}
+}
+
+func ParseSANs(cert *x509.Certificate) SANInfo {
+	san := SANInfo{}
+
+	if len(cert.DNSNames) > 0 {
+		san.DNSNames = make([]string, len(cert.DNSNames))
+		copy(san.DNSNames, cert.DNSNames)
+	}
+
+	if len(cert.IPAddresses) > 0 {
+		san.IPAddresses = make([]string, len(cert.IPAddresses))
+		for i, ip := range cert.IPAddresses {
+			san.IPAddresses[i] = ip.String()
+		}
+	}
+
+	return san
 }

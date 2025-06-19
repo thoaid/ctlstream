@@ -33,13 +33,14 @@ type CTLog struct {
 }
 
 type CertMessage struct {
-	CertPEM   string        `json:"cert_pem"`
-	Subject   parser.DNInfo `json:"subject"`
-	Issuer    parser.DNInfo `json:"issuer"`
-	NotBefore string        `json:"not_before"`
-	NotAfter  string        `json:"not_after"`
-	Source    string        `json:"source"`
-	Timestamp int64         `json:"timestamp"`
+	CertPEM   string         `json:"cert_pem"`
+	Subject   parser.DNInfo  `json:"subject"`
+	SANs      parser.SANInfo `json:"sans"`
+	Issuer    parser.DNInfo  `json:"issuer"`
+	NotBefore string         `json:"not_before"`
+	NotAfter  string         `json:"not_after"`
+	Source    string         `json:"source"`
+	Timestamp int64          `json:"timestamp"`
 }
 
 type Entry struct {
@@ -216,6 +217,7 @@ func MonitorLog(ctx context.Context, h *hub.Hub, lg CTLog, noCert bool) {
 						NotAfter:  cert.NotAfter.Format(time.RFC3339),
 						Source:    lg.Description,
 						Timestamp: time.Now().Unix(),
+						SANs:      parser.ParseSANs(cert),
 					}
 
 					if !noCert {
