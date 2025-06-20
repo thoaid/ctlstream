@@ -35,7 +35,6 @@ $ websocat wss://ctlstream.interrupt.sh/stream  | jq -r '.sans.dns_names'
 ["*.na1-event-dev.cvent.cloud", "*.connect-2025-ai-switcher-test-0-1-3-pr-15.na1-event-dev.cvent.cloud"]
 ["*.okempleos.com", "www.admin.okempleos.com", "www.qaadmin.okempleos.com", "www.qaapp.okempleos.com"]
 ...
-...
 ```
 
 # Public instance
