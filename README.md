@@ -20,19 +20,21 @@ Binaries for Linux, OSX and Windows can be found on the [latest release](https:/
 
 ```
 $ websocat ws://localhost:8080/ws
-{"subject":{"CN":"jessy-yung-couverture.com","O":null,"OU":null,"C":null,"raw":"CN=jessy-yung-couverture.com"},"issuer":{"CN":"R11","O":["Let's Encrypt"],"OU":null,"C":["US"],"raw":"CN=R11,O=Let's Encrypt,C=US"},"not_before":"2025-06-19T19:30:14Z","not_after":"2025-09-17T19:30:13Z","source":"Google 'Argon2025h2' log","timestamp":1750364999}
-{"subject":{"CN":"api.biolifrplasma.com","O":null,"OU":null,"C":null,"raw":"CN=api.biolifrplasma.com"},"issuer":{"CN":"R11","O":["Let's Encrypt"],"OU":null,"C":["US"],"raw":"CN=R11,O=Let's Encrypt,C=US"},"not_before":"2025-06-19T19:30:18Z","not_after":"2025-09-17T19:30:17Z","source":"Google 'Argon2025h2' log","timestamp":1750364999}
-{"subject":{"CN":"www.mx01.expo-realestate.com","O":null,"OU":null,"C":null,"raw":"CN=www.mx01.expo-realestate.com"},"issuer":{"CN":"R11","O":["Let's Encrypt"],"OU":null,"C":["US"],"raw":"CN=R11,O=Let's Encrypt,C=US"},"not_before":"2025-06-19T19:30:18Z","not_after":"2025-09-17T19:30:17Z","source":"Google 'Argon2025h2' log","timestamp":1750364999}
+{"subject":{"CN":"jalq.in","O":null,"OU":null,"C":null,"raw":"CN=jalq.in"},"sans":{"dns_names":["jalq.in","www.jalq.in"],"ip_addresses":null},"issuer":{"CN":"Go Daddy Secure Certificate Authority - G2","O":["GoDaddy.com, Inc."],"OU":["http://certs.godaddy.com/repository/"],"C":["US"],"raw":"CN=Go Daddy Secure Certificate Authority - G2,OU=http://certs.godaddy.com/repository/,O=GoDaddy.com\\, Inc.,L=Scottsdale,ST=Arizona,C=US"},"not_before":"2025-06-19T23:39:54Z","not_after":"2025-09-17T23:39:54Z","source":"Google 'Argon2025h2' log","timestamp":1750380090}
+{"subject":{"CN":"externalapi-dev-01.horizon-hlx.aws-dev.capgroup.com","O":["The Capital Group Companies Inc"],"OU":null,"C":["US"],"raw":"CN=externalapi-dev-01.horizon-hlx.aws-dev.capgroup.com,O=The Capital Group Companies Inc,L=San Antonio,ST=Texas,C=US"},"sans":{"dns_names":["externalapi-dev-01.horizon-hlx.aws-dev.capgroup.com"],"ip_addresses":null},"issuer":{"CN":"DigiCert Global G2 TLS RSA SHA256 2020 CA1","O":["DigiCert Inc"],"OU":null,"C":["US"],"raw":"CN=DigiCert Global G2 TLS RSA SHA256 2020 CA1,O=DigiCert Inc,C=US"},"not_before":"2025-06-20T00:00:00Z","not_after":"2025-11-02T23:59:59Z","source":"Google 'Argon2025h2' log","timestamp":1750380090}
+{"subject":{"CN":"nssol960519a2461d7e19b3devaos.axcloud.dynamics.com","O":["Microsoft Corporation"],"OU":null,"C":["US"],"raw":"CN=nssol960519a2461d7e19b3devaos.axcloud.dynamics.com,O=Microsoft Corporation,L=Redmond,ST=WA,C=US"},"sans":{"dns_names":["nssol960519a2461d7e19b3devret.axcloud.dynamics.com","nssol960519a2461d7e19b3devpos.axcloud.dynamics.com","nssol960519a2461d7e19b3devaossoap.axcloud.dynamics.com","nssol960519a2461d7e19b3devaos.axcloud.dynamics.com"],"ip_addresses":null},"issuer":{"CN":"Microsoft Azure RSA TLS Issuing CA 08","O":["Microsoft Corporation"],"OU":null,"C":["US"],"raw":"CN=Microsoft Azure RSA TLS Issuing CA 08,O=Microsoft Corporation,C=US"},"not_before":"2025-06-20T00:29:46Z","not_after":"2025-12-17T00:29:46Z","source":"Google 'Argon2025h2' log","timestamp":1750380090}
 ...
 ```
 
 * The output is simple JSON. You can pipe it into tools like `jq` or save it to a file for post-processing:
 
 ```
-$ websocat ws://localhost:8080/ws | jq '.subject.CN'
-"www.scc-ny.com"
-"www.teamhustlemovement.com"
-"nostalgie-shop.de"
+$ websocat wss://ctlstream.interrupt.sh/stream  | jq -r '.sans.dns_names'
+["www.lookbackinstagram.com", "lookbackinstagram.com"]
+["*.kiltbenchmark.org", "kiltbenchmark.org", "www.kiltbenchmark.org"]
+["*.na1-event-dev.cvent.cloud", "*.connect-2025-ai-switcher-test-0-1-3-pr-15.na1-event-dev.cvent.cloud"]
+["*.okempleos.com", "www.admin.okempleos.com", "www.qaadmin.okempleos.com", "www.qaapp.okempleos.com"]
+...
 ...
 ```
 
