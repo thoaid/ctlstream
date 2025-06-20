@@ -38,14 +38,15 @@ type ctLogEntry struct {
 }
 
 type certMessage struct {
-	CertPEM   string         `json:"cert_pem"`
-	Subject   parser.DNInfo  `json:"subject"`
-	SANs      parser.SANInfo `json:"sans"`
-	Issuer    parser.DNInfo  `json:"issuer"`
-	NotBefore string         `json:"not_before"`
-	NotAfter  string         `json:"not_after"`
-	Source    string         `json:"source"`
-	Timestamp int64          `json:"timestamp"`
+	CertPEM         string                 `json:"cert_pem"`
+	CertFingerprint parser.FingerprintInfo `json:"cert_fingerprint"`
+	Subject         parser.DNInfo          `json:"subject"`
+	SANs            parser.SANInfo         `json:"sans"`
+	Issuer          parser.DNInfo          `json:"issuer"`
+	NotBefore       string                 `json:"not_before"`
+	NotAfter        string                 `json:"not_after"`
+	Source          string                 `json:"source"`
+	Timestamp       int64                  `json:"timestamp"`
 }
 
 type logMonitor struct {
@@ -222,6 +223,7 @@ func monitorLog(ctx context.Context, h *hub.Hub, lg ctLog, noCert bool) {
 
 					if !noCert {
 						msg.CertPEM = parser.CertToPEM(cert)
+						msg.CertFingerprint = parser.GetFingerprint(cert)
 					}
 
 					if data, err := json.Marshal(msg); err == nil {

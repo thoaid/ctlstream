@@ -1,9 +1,11 @@
 package parser
 
 import (
+	"crypto/sha256"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/pem"
 
 	ct "github.com/google/certificate-transparency-go"
@@ -21,6 +23,10 @@ type DNInfo struct {
 type SANInfo struct {
 	DNSNames    []string `json:"dns_names"`
 	IPAddresses []string `json:"ip_addresses"`
+}
+
+type FingerprintInfo struct {
+	SHA256 string `json:"sha256"`
 }
 
 func ParseCertificates(leafB64, extraB64 string) ([]*x509.Certificate, error) {
@@ -76,6 +82,15 @@ func CertToPEM(cert *x509.Certificate) string {
 		Type:  "CERTIFICATE",
 		Bytes: cert.Raw,
 	}))
+}
+
+func GetFingerprint(cert *x509.Certificate) FingerprintInfo {
+	sha256Hash := sha256.Sum256(cert.Raw)
+	sha256Hex := hex.EncodeToString(sha256Hash[:])
+
+	return FingerprintInfo{
+		SHA256: sha256Hex,
+	}
 }
 
 func ParseDN(name pkix.Name) DNInfo {
