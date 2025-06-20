@@ -92,8 +92,7 @@ func ParseSANs(cert *x509.Certificate) SANInfo {
 	san := SANInfo{}
 
 	if len(cert.DNSNames) > 0 {
-		san.DNSNames = make([]string, len(cert.DNSNames))
-		copy(san.DNSNames, cert.DNSNames)
+		san.DNSNames = cert.DNSNames
 	}
 
 	if len(cert.IPAddresses) > 0 {
