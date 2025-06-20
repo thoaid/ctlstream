@@ -24,7 +24,7 @@ const (
 	logListRefresh = 15 * time.Minute
 )
 
-type CTLog struct {
+type ctLog struct {
 	Description string `json:"description"`
 	URL         string `json:"url"`
 	State       struct {
@@ -32,7 +32,12 @@ type CTLog struct {
 	} `json:"state"`
 }
 
-type CertMessage struct {
+type ctLogEntry struct {
+	LeafInput string `json:"leaf_input"`
+	ExtraData string `json:"extra_data"`
+}
+
+type certMessage struct {
 	CertPEM   string         `json:"cert_pem"`
 	Subject   parser.DNInfo  `json:"subject"`
 	SANs      parser.SANInfo `json:"sans"`
@@ -43,12 +48,7 @@ type CertMessage struct {
 	Timestamp int64          `json:"timestamp"`
 }
 
-type Entry struct {
-	LeafInput string `json:"leaf_input"`
-	ExtraData string `json:"extra_data"`
-}
-
-type LogMonitor struct {
+type logMonitor struct {
 	ctx        context.Context
 	hub        *hub.Hub
 	noCert     bool
@@ -56,8 +56,8 @@ type LogMonitor struct {
 	activeLogs map[string]context.CancelFunc
 }
 
-func NewLogMonitor(ctx context.Context, h *hub.Hub, noCert bool) *LogMonitor {
-	return &LogMonitor{
+func NewLogMonitor(ctx context.Context, h *hub.Hub, noCert bool) *logMonitor {
+	return &logMonitor{
 		ctx:        ctx,
 		hub:        h,
 		noCert:     noCert,
@@ -65,7 +65,7 @@ func NewLogMonitor(ctx context.Context, h *hub.Hub, noCert bool) *LogMonitor {
 	}
 }
 
-func (lm *LogMonitor) Start() error {
+func (lm *logMonitor) Start() error {
 	if err := lm.refreshLogs(); err != nil {
 		return fmt.Errorf("initial log fetch: %w", err)
 	}
@@ -74,7 +74,7 @@ func (lm *LogMonitor) Start() error {
 	return nil
 }
 
-func (lm *LogMonitor) periodicRefresh() {
+func (lm *logMonitor) periodicRefresh() {
 	ticker := time.NewTicker(logListRefresh)
 	defer ticker.Stop()
 
@@ -90,7 +90,7 @@ func (lm *LogMonitor) periodicRefresh() {
 	}
 }
 
-func (lm *LogMonitor) refreshLogs() error {
+func (lm *logMonitor) refreshLogs() error {
 	logs, err := fetchLogs(lm.ctx)
 	if err != nil {
 		return err
@@ -125,7 +125,7 @@ func (lm *LogMonitor) refreshLogs() error {
 	return nil
 }
 
-func fetchLogs(ctx context.Context) ([]CTLog, error) {
+func fetchLogs(ctx context.Context) ([]ctLog, error) {
 	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, LogListURL, nil)
 	req.Header.Set("User-Agent", UserAgent)
 
@@ -141,7 +141,7 @@ func fetchLogs(ctx context.Context) ([]CTLog, error) {
 
 	var list struct {
 		Operators []struct {
-			Logs []CTLog `json:"logs"`
+			Logs []ctLog `json:"logs"`
 		} `json:"operators"`
 	}
 
@@ -149,7 +149,7 @@ func fetchLogs(ctx context.Context) ([]CTLog, error) {
 		return nil, err
 	}
 
-	var logs []CTLog
+	var logs []ctLog
 	for _, op := range list.Operators {
 		for _, lg := range op.Logs {
 			if lg.State.Usable != nil {
@@ -161,7 +161,7 @@ func fetchLogs(ctx context.Context) ([]CTLog, error) {
 	return logs, nil
 }
 
-func monitorLog(ctx context.Context, h *hub.Hub, lg CTLog, noCert bool) {
+func monitorLog(ctx context.Context, h *hub.Hub, lg ctLog, noCert bool) {
 	log.Printf("starting monitor for %s (%s)", lg.Description, lg.URL)
 	defer log.Printf("stopped monitoring %s", lg.Description)
 
@@ -210,7 +210,7 @@ func monitorLog(ctx context.Context, h *hub.Hub, lg CTLog, noCert bool) {
 			for _, e := range entries {
 				certs, _ := parser.ParseCertificates(e.LeafInput, e.ExtraData)
 				for _, cert := range certs {
-					msg := CertMessage{
+					msg := certMessage{
 						Subject:   parser.ParseDN(cert.Subject),
 						Issuer:    parser.ParseDN(cert.Issuer),
 						NotBefore: cert.NotBefore.Format(time.RFC3339),
@@ -261,7 +261,7 @@ func getTreeSize(ctx context.Context, client *http.Client, logURL string) (uint6
 	return sth.TreeSize, nil
 }
 
-func getEntries(ctx context.Context, client *http.Client, logURL string, start, end uint64) ([]Entry, error) {
+func getEntries(ctx context.Context, client *http.Client, logURL string, start, end uint64) ([]ctLogEntry, error) {
 	url := fmt.Sprintf("%s/ct/v1/get-entries?start=%d&end=%d",
 		strings.TrimSuffix(logURL, "/"), start, end)
 	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
@@ -279,7 +279,7 @@ func getEntries(ctx context.Context, client *http.Client, logURL string, start, 
 	}
 
 	var result struct {
-		Entries []Entry `json:"entries"`
+		Entries []ctLogEntry `json:"entries"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
