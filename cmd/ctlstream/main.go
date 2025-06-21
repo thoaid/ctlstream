@@ -14,8 +14,6 @@ import (
 	"github.com/thoaid/ctlstream/internal/monitor"
 )
 
-var noCert = flag.Bool("nocert", false, "omit certificate PEM from output")
-
 func main() {
 	flag.Parse()
 
@@ -34,7 +32,7 @@ func main() {
 
 	http.HandleFunc("/ws", h.HandleWS)
 
-	lm := monitor.NewLogMonitor(ctx, h, *noCert)
+	lm := monitor.NewLogMonitor(ctx, h)
 	if err := lm.Start(); err != nil {
 		log.Fatalf("failed to start log monitor: %v", err)
 	}

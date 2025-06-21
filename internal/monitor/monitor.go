@@ -52,16 +52,14 @@ type certMessage struct {
 type logMonitor struct {
 	ctx        context.Context
 	hub        *hub.Hub
-	noCert     bool
 	mu         sync.RWMutex
 	activeLogs map[string]context.CancelFunc
 }
 
-func NewLogMonitor(ctx context.Context, h *hub.Hub, noCert bool) *logMonitor {
+func NewLogMonitor(ctx context.Context, h *hub.Hub) *logMonitor {
 	return &logMonitor{
 		ctx:        ctx,
 		hub:        h,
-		noCert:     noCert,
 		activeLogs: make(map[string]context.CancelFunc),
 	}
 }
@@ -118,7 +116,7 @@ func (lm *logMonitor) refreshLogs() error {
 			log.Printf("adding CT log: %s (%s)", lg.Description, lg.URL)
 			ctx, cancel := context.WithCancel(lm.ctx)
 			lm.activeLogs[lg.URL] = cancel
-			go monitorLog(ctx, lm.hub, lg, lm.noCert)
+			go monitorLog(ctx, lm.hub, lg)
 		}
 	}
 
@@ -162,7 +160,7 @@ func fetchLogs(ctx context.Context) ([]ctLog, error) {
 	return logs, nil
 }
 
-func monitorLog(ctx context.Context, h *hub.Hub, lg ctLog, noCert bool) {
+func monitorLog(ctx context.Context, h *hub.Hub, lg ctLog) {
 	log.Printf("starting monitor for %s (%s)", lg.Description, lg.URL)
 	defer log.Printf("stopped monitoring %s", lg.Description)
 
@@ -212,18 +210,15 @@ func monitorLog(ctx context.Context, h *hub.Hub, lg ctLog, noCert bool) {
 				certs, _ := parser.ParseCertificates(e.LeafInput, e.ExtraData)
 				for _, cert := range certs {
 					msg := certMessage{
-						Subject:   parser.ParseDN(cert.Subject),
-						Issuer:    parser.ParseDN(cert.Issuer),
-						NotBefore: cert.NotBefore.Format(time.RFC3339),
-						NotAfter:  cert.NotAfter.Format(time.RFC3339),
-						Source:    lg.Description,
-						Timestamp: time.Now().Unix(),
-						SANs:      parser.ParseSANs(cert),
-					}
-
-					if !noCert {
-						msg.CertPEM = parser.CertToPEM(cert)
-						msg.CertFingerprint = parser.GetFingerprint(cert)
+						CertPEM:         parser.CertToPEM(cert),
+						CertFingerprint: parser.GetFingerprint(cert),
+						Subject:         parser.ParseDN(cert.Subject),
+						Issuer:          parser.ParseDN(cert.Issuer),
+						NotBefore:       cert.NotBefore.Format(time.RFC3339),
+						NotAfter:        cert.NotAfter.Format(time.RFC3339),
+						Source:          lg.Description,
+						Timestamp:       time.Now().Unix(),
+						SANs:            parser.ParseSANs(cert),
 					}
 
 					if data, err := json.Marshal(msg); err == nil {
