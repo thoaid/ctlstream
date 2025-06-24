@@ -23,11 +23,20 @@ type Hub struct {
 	Msgs    chan []byte
 }
 
+type clientType int
+
+const (
+	clientTypeNormal clientType = iota
+	clientTypeSample
+)
+
 type client struct {
-	conn   *websocket.Conn
-	send   chan []byte
-	hub    *Hub
-	filter *fieldFilter
+	conn       *websocket.Conn
+	send       chan []byte
+	hub        *Hub
+	filter     *fieldFilter
+	clientType clientType
+	sampler    *Sampler
 }
 
 var upgrader = websocket.Upgrader{
@@ -115,32 +124,71 @@ var allowedFields = map[string]bool{
 func New() *Hub {
 	return &Hub{
 		clients: make(map[*client]struct{}),
-		Msgs:    make(chan []byte, 1024),
+		Msgs:    make(chan []byte, 4096),
 	}
 }
 
 func (h *Hub) Run() {
-	for msg := range h.Msgs {
-		h.mu.RLock()
-		for c := range h.clients {
+	ticker := time.NewTicker(100 * time.Millisecond)
+	defer ticker.Stop()
 
-			filteredMsg := msg
-			if c.filter != nil {
-				filtered, err := filterMessage(msg, c.filter)
-				if err != nil {
-					log.Printf("filter error: %v", err)
-					continue
-				}
-				filteredMsg = filtered
+	for {
+		select {
+		case msg := <-h.Msgs:
+			h.broadcast(msg)
+		case <-ticker.C:
+			h.flushSampler()
+		}
+	}
+}
+
+func (h *Hub) broadcast(msg []byte) {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	for c := range h.clients {
+		filteredMsg := msg
+		if c.filter != nil {
+			filtered, err := filterMessage(msg, c.filter)
+			if err != nil {
+				log.Printf("filter error: %v", err)
+				continue
 			}
+			filteredMsg = filtered
+		}
 
+		if c.clientType == clientTypeSample && c.sampler != nil {
+			if sampleMsg, ok := c.sampler.Add(filteredMsg); ok {
+				select {
+				case c.send <- sampleMsg:
+				default:
+					h.removeClient(c)
+				}
+			}
+		} else {
 			select {
 			case c.send <- filteredMsg:
 			default:
 				h.removeClient(c)
 			}
 		}
-		h.mu.RUnlock()
+	}
+}
+
+func (h *Hub) flushSampler() {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	for c := range h.clients {
+		if c.clientType == clientTypeSample && c.sampler != nil {
+			if sampleMsg, ok := c.sampler.Check(); ok {
+				select {
+				case c.send <- sampleMsg:
+				default:
+					h.removeClient(c)
+				}
+			}
+		}
 	}
 }
 
@@ -154,10 +202,11 @@ func (h *Hub) HandleWS(w http.ResponseWriter, r *http.Request) {
 	filter := parseFilter(r.URL.Query().Get("filter"))
 
 	c := &client{
-		conn:   conn,
-		send:   make(chan []byte, 256),
-		hub:    h,
-		filter: filter,
+		conn:       conn,
+		send:       make(chan []byte, 256),
+		hub:        h,
+		filter:     filter,
+		clientType: clientTypeNormal,
 	}
 
 	h.mu.Lock()
@@ -250,7 +299,7 @@ func parseFilter(filterParam string) *fieldFilter {
 
 func filterMessage(msg []byte, filter *fieldFilter) ([]byte, error) {
 
-	var data map[string]interface{}
+	var data map[string]any
 	if err := json.Unmarshal(msg, &data); err != nil {
 		return nil, err
 	}
@@ -260,8 +309,8 @@ func filterMessage(msg []byte, filter *fieldFilter) ([]byte, error) {
 	return json.Marshal(filtered)
 }
 
-func filterObject(obj map[string]interface{}, filter *fieldFilter, path []string) map[string]interface{} {
-	result := make(map[string]interface{})
+func filterObject(obj map[string]any, filter *fieldFilter, path []string) map[string]any {
+	result := make(map[string]any)
 
 	for key, value := range obj {
 		currentPath := append(path, key)
@@ -270,7 +319,7 @@ func filterObject(obj map[string]interface{}, filter *fieldFilter, path []string
 			continue
 		}
 
-		if nestedObj, ok := value.(map[string]interface{}); ok {
+		if nestedObj, ok := value.(map[string]any); ok {
 
 			fieldFilter := filter
 			for _, p := range currentPath {
@@ -313,4 +362,30 @@ func (h *Hub) NeedsCertData() bool {
 		}
 	}
 	return false
+}
+
+func (h *Hub) HandleSampleWS(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Printf("upgrade: %v", err)
+		return
+	}
+
+	filter := parseFilter(r.URL.Query().Get("filter"))
+
+	c := &client{
+		conn:       conn,
+		send:       make(chan []byte, 256),
+		hub:        h,
+		filter:     filter,
+		clientType: clientTypeSample,
+		sampler:    NewSampler(150, filter),
+	}
+
+	h.mu.Lock()
+	h.clients[c] = struct{}{}
+	h.mu.Unlock()
+
+	go c.write()
+	go c.read()
 }

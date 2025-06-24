@@ -31,6 +31,7 @@ func main() {
 	go h.Run()
 
 	http.HandleFunc("/ws", h.HandleWS)
+	http.HandleFunc("/sample", h.HandleSampleWS)
 
 	lm := monitor.NewLogMonitor(ctx, h)
 	if err := lm.Start(); err != nil {
